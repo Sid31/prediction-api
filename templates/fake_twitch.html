@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IShowSpeed - Twitch</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roobert', 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: #0e0e10;
+            color: #efeff1;
+        }
+        
+        /* Twitch Header */
+        .header {
+            height: 50px;
+            background: #18181b;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #1f1f23;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #9147ff;
+            margin-right: 30px;
+        }
+        
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            background: #18181b;
+            border: 1px solid #464649;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #efeff1;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 15px;
+            margin-left: auto;
+        }
+        
+        .btn {
+            padding: 5px 15px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .btn-primary {
+            background: #9147ff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #464649;
+            color: white;
+        }
+        
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+        
+        /* Video Player */
+        .video-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0e0e10;
+        }
+        
+        .video-container {
+            position: relative;
+            background: #000;
+            aspect-ratio: 16/9;
+        }
+        
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .live-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #eb0400;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        .viewer-count {
+            position: absolute;
+            top: 15px;
+            left: 80px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Stream Info */
+        .stream-info {
+            padding: 15px 20px;
+            background: #18181b;
+        }
+        
+        .streamer-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .streamer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .streamer-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #efeff1;
+        }
+        
+        .stream-title {
+            font-size: 16px;
+            color: #efeff1;
+            margin-bottom: 5px;
+        }
+        
+        .stream-meta {
+            font-size: 13px;
+            color: #adadb8;
+        }
+        
+        /* Chat Sidebar */
+        .chat-section {
+            width: 340px;
+            background: #18181b;
+            border-left: 1px solid #1f1f23;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #1f1f23;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            color: #adadb8;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .chat-message {
+            margin-bottom: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .chat-username {
+            font-weight: bold;
+            color: #9147ff;
+            margin-right: 5px;
+        }
+        
+        .chat-input-container {
+            padding: 10px;
+            border-top: 1px solid #1f1f23;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 10px;
+            background: #464649;
+            border: none;
+            border-radius: 4px;
+            color: #efeff1;
+            font-size: 13px;
+        }
+        
+        /* Prediction Card (will be shown by extension) */
+        .prediction-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            margin: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .prediction-banner:hover {
+            transform: scale(1.02);
+        }
+        
+        .prediction-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .prediction-question {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* About Section */
+        .about-section {
+            padding: 15px 20px;
+            background: #18181b;
+            border-bottom: 1px solid #1f1f23;
+        }
+        
+        .about-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .about-text {
+            font-size: 13px;
+            color: #adadb8;
+            line-height: 1.5;
+        }
+        
+        .tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .tag {
+            background: #464649;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #efeff1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Twitch Header -->
+    <div class="header">
+        <div class="logo">twitch</div>
+        <input type="text" class="search-bar" placeholder="Search">
+        <div class="user-actions">
+            <button class="btn btn-secondary">Log In</button>
+            <button class="btn btn-primary">Sign Up</button>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Video Section -->
+        <div class="video-section">
+            <!-- Video Player -->
+            <div class="video-container">
+                <video id="stream-video" controls autoplay>
+                    <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+                </video>
+                <div class="live-badge">● LIVE</div>
+                <div class="viewer-count">👁️ 45,328 viewers</div>
+            </div>
+            
+            <!-- Prediction Banner (Extension will enhance this) -->
+            <div class="prediction-banner" id="prediction-banner">
+                <div class="prediction-title">🎯 Active Prediction</div>
+                <div class="prediction-question">Will IShowSpeed do a backflip?</div>
+            </div>
+            
+            <!-- Stream Info -->
+            <div class="stream-info">
+                <div class="streamer-header">
+                    <div class="streamer-avatar">⚡</div>
+                    <div>
+                        <div class="streamer-name">IShowSpeed</div>
+                        <div class="stream-meta">Just Chatting</div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-left: auto;">Follow</button>
+                </div>
+                <div class="stream-title">CRAZY AMUSEMENT PARK CHALLENGE!! 🎢⚡</div>
+                <div class="stream-meta">45.3K viewers · Started 2 hours ago</div>
+            </div>
+            
+            <!-- About Section -->
+            <div class="about-section">
+                <div class="about-title">About</div>
+                <div class="about-text">
+                    YOOOO WHAT'S GOOD!! Doing crazy challenges at the amusement park! Will I do a backflip?? 
+                    Watch and find out! Make sure to drop a follow and turn on notifications! 🔥⚡
+                </div>
+                <div class="tags">
+                    <span class="tag">English</span>
+                    <span class="tag">Entertainment</span>
+                    <span class="tag">Challenges</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="chat-header">Stream Chat</div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message">
+                    <span class="chat-username">SpeedFan123:</span>
+                    <span>HE'S GONNA DO IT! 🔥</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">GamerGirl:</span>
+                    <span>I bet YES on the backflip!</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">CryptoKing:</span>
+                    <span>Just placed 100 USDC on YES 💰</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">AIWatcher:</span>
+                    <span>AI is analyzing the stream live 🤖</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">BetMaster:</span>
+                    <span>Odds looking good for YES betters!</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">SpeedArmy:</span>
+                    <span>LET'S GOOOOO ⚡⚡⚡</span>
+                </div>
+                <div class="chat-message">
+                    <span class="chat-username">Moderator:</span>
+                    <span style="color: #00ff00;">Prediction ends in 30 seconds!</span>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" placeholder="Send a message">
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Simulate live chat
+        const chatMessages = document.getElementById('chat-messages');
+        const messages = [
+            { user: 'SpeedFan456', text: 'YOOO HE\'S CRAZY 😂' },
+            { user: 'BetLord', text: 'My AI agent detected a 99% chance!' },
+            { user: 'TwitchViewer', text: 'StreamBet is the future of betting 🚀' },
+            { user: 'CryptoWhale', text: 'Just bet 500 USDC lets go!' },
+            { user: 'AIBot', text: '🤖 Backflip probability: 85%' },
+            { user: 'SpeedSquad', text: 'SPEED NEVER MISSES ⚡' },
+            { user: 'Moderator', text: 'Remember to bet responsibly!' },
+            { user: 'NewViewer', text: 'How do I place a bet?' },
+            { user: 'ProBetter', text: 'Use the StreamBet extension!' }
+        ];
+        
+        let messageIndex = 0;
+        setInterval(() => {
+            const msg = messages[messageIndex % messages.length];
+            const div = document.createElement('div');
+            div.className = 'chat-message';
+            div.innerHTML = `<span class="chat-username">${msg.user}:</span><span>${msg.text}</span>`;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            messageIndex++;
+            
+            // Keep only last 20 messages
+            if (chatMessages.children.length > 20) {
+                chatMessages.removeChild(chatMessages.firstChild);
+            }
+        }, 3000);
+        
+        // Extension detection helper
+        window.STREAMBET_PAGE_DATA = {
+            platform: 'twitch',
+            streamer: 'IShowSpeed',
+            isLive: true,
+            prediction: {
+                id: 'backflip_prediction_001',
+                question: 'Will IShowSpeed do a backflip?',
+                options: ['Yes', 'No'],
+                video_url: window.location.origin + '/uploads/1760892120_tets.mp4',
+                video_id: 'ishowspeed_live_' + Date.now(),
+                ends_at: Date.now() + 30000, // 30 seconds
+                detection_config: {
+                    labels: ['fighting', 'sport', 'jumping', 'backflip'],
+                    confidence: 0.7,
+                    time_window: [17, 23] // seconds 17-23
+                }
+            }
+        };
+        
+        // Notify extension that page is ready
+        window.dispatchEvent(new CustomEvent('streambet:page-ready', {
+            detail: window.STREAMBET_PAGE_DATA
+        }));
+        
+        console.log('🎮 StreamBet Demo Page Ready');
+        console.log('📡 Page data available for extension:', window.STREAMBET_PAGE_DATA);
+    </script>
+</body>
+</html>

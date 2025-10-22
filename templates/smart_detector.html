@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Detector - StreamBet AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+        }
+        
+        .chat-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            margin-bottom: 20px;
+        }
+        
+        .chat-header h2 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .chat-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.ai {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-right: auto;
+        }
+        
+        .message.user {
+            background: #f0f0f0;
+            color: #333;
+            margin-left: auto;
+        }
+        
+        .message-content {
+            line-height: 1.5;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .quick-btn {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .send-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .detection-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .detection-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .detection-header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .detection-config {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .config-item {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .config-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .config-value {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .video-container {
+            margin-bottom: 20px;
+        }
+        
+        video {
+            width: 100%;
+            border-radius: 12px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .counter-display {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .counter-value {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .counter-label {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+        
+        .results-area {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-timestamp {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .result-text {
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Chat Panel -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h2>🤖 AI Detection Assistant</h2>
+                <p>Tell me what you want to detect!</p>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai">
+                    <div class="message-content">
+                        👋 Hi! I'm your AI detection assistant. Tell me what you want to detect in your video!
+                        <div class="quick-actions">
+                            <button class="quick-btn" onclick="quickDetect('ishowspeed backflip')">
+                                🎪 IShowSpeed Backflip
+                            </button>
+                            <button class="quick-btn" onclick="quickDetect('roller coaster')">
+                                🎢 Roller Coaster
+                            </button>
+                            <button class="quick-btn" onclick="quickDetect('video game kills')">
+                                🎮 Game Kills
+                            </button>
+                            <button class="quick-btn" onclick="quickDetect('people dancing')">
+                                💃 Dancing People
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="chat-input" 
+                    placeholder="E.g., 'Detect when roller coaster appears' or 'Count kills in gameplay'"
+                    onkeypress="if(event.key==='Enter') sendMessage()"
+                >
+                <button class="send-btn" id="send-btn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        
+        <!-- Detection Panel -->
+        <div class="detection-panel">
+            <div class="detection-header">
+                <h1>🎯 Smart Video Detector</h1>
+                <p>AI-configured detection based on your request</p>
+            </div>
+            
+            <div class="detection-config" id="detection-config">
+                <h3 style="color: #667eea; margin-bottom: 15px;">📋 Detection Configuration</h3>
+                <div class="config-item">
+                    <span class="config-label">Target:</span>
+                    <span class="config-value" id="config-target">Not configured</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Detection Query:</span>
+                    <span class="config-value" id="config-query">—</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Mode:</span>
+                    <span class="config-value" id="config-mode">Detection / Counting</span>
+                </div>
+            </div>
+            
+            <div class="video-container">
+                <video id="video-player" controls>
+                    <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+                </video>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="start-btn" onclick="startDetection()" disabled>
+                    🚀 Start Detection
+                </button>
+                <button class="btn btn-success" id="reset-btn" onclick="resetDetection()">
+                    🔄 Reset
+                </button>
+            </div>
+            
+            <div class="counter-display" id="counter-display" style="display: none;">
+                <div class="counter-label" id="counter-label">Detected</div>
+                <div class="counter-value" id="counter-value">0</div>
+                <div class="counter-label" id="counter-description">—</div>
+            </div>
+            
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>AI is analyzing your video...</p>
+            </div>
+            
+            <div class="results-area" id="results-area"></div>
+        </div>
+    </div>
+    
+    <script>
+        let currentConfig = null;
+        let isAnalyzing = false;
+        
+        // Quick detect shortcuts
+        function quickDetect(intent) {
+            document.getElementById('chat-input').value = `I want to detect ${intent}`;
+            sendMessage();
+        }
+        
+        // Send message to AI
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message || isAnalyzing) return;
+            
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+            
+            // Disable input
+            isAnalyzing = true;
+            document.getElementById('send-btn').disabled = true;
+            
+            try {
+                // Send to AI to generate config
+                const response = await fetch('/api/configure-detection', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({intent: message})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show AI response
+                    addMessage('ai', data.response);
+                    
+                    // Update detection config
+                    currentConfig = data.config;
+                    updateDetectionConfig(data.config);
+                    
+                    // Enable start button
+                    document.getElementById('start-btn').disabled = false;
+                } else {
+                    addMessage('ai', `❌ Sorry, I couldn't understand that. Try: "Detect backflips" or "Count kills in gameplay"`);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', '❌ Error communicating with AI. Please try again.');
+            } finally {
+                isAnalyzing = false;
+                document.getElementById('send-btn').disabled = false;
+            }
+        }
+        
+        // Add message to chat
+        function addMessage(type, content) {
+            const messages = document.getElementById('chat-messages');
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.innerHTML = `<div class="message-content">${content}</div>`;
+            messages.appendChild(message);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        // Update detection config display
+        function updateDetectionConfig(config) {
+            document.getElementById('config-target').textContent = config.target;
+            document.getElementById('config-query').textContent = config.query;
+            document.getElementById('config-mode').textContent = config.mode;
+        }
+        
+        // Start detection
+        async function startDetection() {
+            if (!currentConfig) {
+                alert('Please configure detection first by chatting with the AI!');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            const counterDisplay = document.getElementById('counter-display');
+            const resultsArea = document.getElementById('results-area');
+            const startBtn = document.getElementById('start-btn');
+            
+            loading.style.display = 'block';
+            startBtn.disabled = true;
+            resultsArea.innerHTML = '';
+            
+            // Show counter if counting mode
+            if (currentConfig.mode.includes('Counting')) {
+                counterDisplay.style.display = 'block';
+                document.getElementById('counter-label').textContent = currentConfig.target;
+                document.getElementById('counter-value').textContent = '0';
+                document.getElementById('counter-description').textContent = 'Analyzing...';
+            }
+            
+            try {
+                const video = document.getElementById('video-player');
+                const duration = video.duration;
+                let maxCount = 0;
+                
+                // Analyze every second
+                for (let t = 0; t < duration; t += 1) {
+                    video.currentTime = t;
+                    await new Promise(resolve => video.onseeked = resolve);
+                    
+                    // Capture frame
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+                    
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                    
+                    // Analyze with AI
+                    const formData = new FormData();
+                    formData.append('frame', blob);
+                    formData.append('query', currentConfig.query);
+                    
+                    const response = await fetch('/api/analyze-with-ai', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Add result
+                        addResult(t, data.answer);
+                        
+                        // Extract count if in counting mode
+                        if (currentConfig.mode.includes('Counting')) {
+                            const numbers = data.answer.match(/\d+/g);
+                            if (numbers) {
+                                const count = parseInt(numbers[0]);
+                                if (!isNaN(count)) {
+                                    maxCount = Math.max(maxCount, count);
+                                    document.getElementById('counter-value').textContent = maxCount;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (currentConfig.mode.includes('Counting')) {
+                    document.getElementById('counter-description').textContent = `Maximum detected: ${maxCount}`;
+                }
+                
+                addMessage('ai', `✅ Analysis complete! Check the results panel.`);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', '❌ Error during analysis. Please try again.');
+            } finally {
+                loading.style.display = 'none';
+                startBtn.disabled = false;
+            }
+        }
+        
+        // Add result to results area
+        function addResult(timestamp, text) {
+            const resultsArea = document.getElementById('results-area');
+            const result = document.createElement('div');
+            result.className = 'result-item';
+            result.innerHTML = `
+                <div class="result-timestamp">⏱️ ${timestamp.toFixed(1)}s</div>
+                <div class="result-text">${text}</div>
+            `;
+            resultsArea.appendChild(result);
+        }
+        
+        // Reset detection
+        function resetDetection() {
+            document.getElementById('counter-display').style.display = 'none';
+            document.getElementById('results-area').innerHTML = '';
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="message ai">
+                    <div class="message-content">
+                        👋 Reset! Tell me what you want to detect.
+                        <div class="quick-actions">
+                            <button class="quick-btn" onclick="quickDetect('ishowspeed backflip')">
+                                🎪 IShowSpeed Backflip
+                            </button>
+                            <button class="quick-btn" onclick="quickDetect('roller coaster')">
+                                🎢 Roller Coaster
+                            </button>
+                            <button class="quick-btn" onclick="quickDetect('video game kills')">
+                                🎮 Game Kills
+                            </button>
+                            <button class="quick-btn" onclick="quickDetect('people dancing')">
+                                💃 Dancing People
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            currentConfig = null;
+            document.getElementById('start-btn').disabled = true;
+        }
+    </script>
+</body>
+</html>

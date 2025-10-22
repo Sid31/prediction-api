@@ -383,6 +383,34 @@
             videoPlayer.currentTime = timestamp;
             videoPlayer.play();
         }
+        
+        // StreamBet Extension Integration
+        window.STREAMBET_PAGE_DATA = {
+            platform: 'streambet',
+            streamer: 'IShowSpeed',
+            isLive: true,
+            prediction: {
+                id: 'ishowspeed_backflip_prediction',
+                question: 'Will IShowSpeed do a backflip?',
+                options: ['Yes', 'No'],
+                video_url: window.location.origin + '/uploads/1760892120_tets.mp4',
+                video_id: 'ishowspeed_demo_' + Date.now(),
+                ends_at: Date.now() + 60000, // 60 seconds
+                detection_config: {
+                    labels: ['fighting', 'sport', 'jumping', 'backflip', 'acrobatics'],
+                    confidence: 0.7,
+                    time_window: [17, 23] // seconds 17-23 (backflip happens at 19.69s)
+                }
+            }
+        };
+        
+        // Notify extension that page is ready
+        window.dispatchEvent(new CustomEvent('streambet:page-ready', {
+            detail: window.STREAMBET_PAGE_DATA
+        }));
+        
+        console.log('🎮 StreamBet Page Ready - Betting available!');
+        console.log('📡 Page data:', window.STREAMBET_PAGE_DATA);
     </script>
 </body>
 </html>

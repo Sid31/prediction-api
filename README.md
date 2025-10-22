@@ -1,10 +1,12 @@
-# 🎮 StreamBet - AI Video Recognition POC
+# 🎬 StreamBet Recognition API
 
-> **Hackathon-Ready Demo**: AI-powered live betting verification using AWS Rekognition
+> **AI-powered video analysis with real-time live commentary** - Now with Claude Anthropic inspired design
 
 [![AWS](https://img.shields.io/badge/AWS-Rekognition-orange)](https://aws.amazon.com/rekognition/)
+[![Bedrock](https://img.shields.io/badge/AWS-Bedrock-purple)](https://aws.amazon.com/bedrock/)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.0-green)](https://flask.palletsprojects.com/)
+[![ElevenLabs](https://img.shields.io/badge/ElevenLabs-TTS-blueviolet)](https://elevenlabs.io/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ## 🎯 What is StreamBet?
@@ -22,6 +24,12 @@ StreamBet is an AI-powered platform that automatically verifies betting events o
 - ✅ Transparent verification with exact timestamps
 - ✅ Automated bet resolution - no disputes
 - ✅ Instant payouts triggered by AI
+
+### ✨ NEW: Live Commentary System
+- 🎙️ **AI-Generated Commentary**: Amazon Bedrock creates natural sports commentary
+- 🔊 **Text-to-Speech**: ElevenLabs brings commentary to life
+- ⏱️ **Real-Time Updates**: Counter updates as video plays
+- 🎨 **Claude-Inspired Design**: Clean, minimal, professional aesthetic
 
 ## 🚀 Quick Start (5 Minutes)
 
@@ -48,12 +56,21 @@ export AWS_BUCKET=streambet-demo-bucket
 # 4. Create S3 bucket
 aws s3 mb s3://streambet-demo-bucket
 
-# 5. Run the app
+# 5. Set ElevenLabs API key (for voice commentary)
+export ELEVENLABS_API_KEY=your_elevenlabs_key
+
+# 6. Run the app
 python app.py
 
-# 6. Open browser
-open http://localhost:5000
+# 7. Open browser - Main counter is now at root!
+open http://localhost:5000/
 ```
+
+**Routes:**
+- `/` or `/counter` - Main live counter with commentary (Claude design)
+- `/smart` - Smart detector
+- `/widget` - Embeddable widget
+- `/fake-twitch` - Demo page
 
 ### First Test
 
@@ -72,17 +89,21 @@ open http://localhost:5000
 
 ```
 rekognitionAPI/
-├── app.py                      # Main Flask application
+├── app.py                          # Main Flask application
 ├── templates/
-│   └── index.html             # Beautiful web interface
-├── requirements.txt           # Python dependencies
-├── .env.example              # Environment variables template
-├── setup.sh                  # Automated setup script
-├── test_api.py              # API testing script
-├── download_test_video.sh   # Get sample videos
-├── README.md                # This file
-├── HACKATHON_README.md      # Detailed hackathon guide
-└── DEMO_GUIDE.md            # Demo recording guide
+│   ├── simple_counter.html        # Main counter (Claude design) ✨ NEW
+│   ├── smart_detector.html        # Smart detector interface
+│   ├── counter_widget.html        # Embeddable widget
+│   └── fake_twitch.html          # Demo page
+├── requirements.txt               # Python dependencies
+├── .env.example                   # Environment variables template
+├── setup.sh                       # Automated setup script
+├── start.sh                       # Quick start script
+├── README.md                      # This file (main docs)
+├── DEPLOYMENT_GUIDE.md            # Complete deployment guide ✨ NEW
+├── CLAUDE_DESIGN_SYSTEM.md        # Design system documentation ✨ NEW
+├── HACKATHON_README.md           # Hackathon submission guide
+└── DEMO_GUIDE.md                 # Demo recording guide
 ```
 
 ## ✨ Features
@@ -238,11 +259,13 @@ See [HACKATHON_README.md](HACKATHON_README.md) for:
 
 ## 📊 Technical Stack
 
-- **Backend**: Flask (Python)
-- **AI/ML**: AWS Rekognition
-- **Storage**: AWS S3
-- **Frontend**: Vanilla JavaScript + Modern CSS
-- **Future**: AWS Bedrock for AI agents
+- **Backend**: Flask (Python 3.8+)
+- **AI Vision**: AWS Rekognition (label detection, celebrity recognition)
+- **AI Commentary**: Amazon Bedrock (Titan Text Express)
+- **Text-to-Speech**: ElevenLabs API (voice synthesis)
+- **Storage**: AWS S3 + Local file system
+- **Frontend**: Vanilla JavaScript + Claude-inspired CSS
+- **Design**: Claude Anthropic aesthetic (warm minimalism)
 
 ## 🐛 Troubleshooting
 
@@ -319,20 +342,66 @@ Building this POC teaches:
 
 ---
 
-## 🚀 Ready to Demo?
+## 📚 Documentation
 
-1. **Setup**: `./setup.sh` (2 minutes)
-2. **Configure**: Set AWS credentials (1 minute)
-3. **Run**: `python app.py` (30 seconds)
-4. **Test**: Upload a video (1 minute)
-5. **Record**: Make your demo video (5 minutes)
+### Main Guides
+- **[README.md](README.md)** - Overview and quick start (you are here)
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Complete deployment instructions
+- **[CLAUDE_DESIGN_SYSTEM.md](CLAUDE_DESIGN_SYSTEM.md)** - Design system documentation
 
-**Total time to hackathon-ready demo: ~10 minutes**
+### Additional Resources
+- **[HACKATHON_README.md](HACKATHON_README.md)** - Hackathon submission guide
+- **[DEMO_GUIDE.md](DEMO_GUIDE.md)** - Demo recording tips
+- `.env.example` - Environment variables template
+
+### Quick Links
+```bash
+# View deployment guide
+cat DEPLOYMENT_GUIDE.md
+
+# View design system
+cat CLAUDE_DESIGN_SYSTEM.md
+
+# Check environment setup
+cat .env.example
+```
+
+---
+
+## 🚀 Ready to Deploy?
+
+### Development
+```bash
+./start.sh
+# Opens at http://localhost:5000/
+```
+
+### Production
+See **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** for:
+- ✅ Local/Development deployment
+- ✅ Production server setup (Gunicorn + systemd)
+- ✅ Docker deployment
+- ✅ AWS EC2 deployment with Nginx
+- ✅ SSL certificate setup
+- ✅ Monitoring and maintenance
+
+---
+
+## 🎨 Design System
+
+The interface uses **Claude Anthropic inspired design**:
+- 🎨 Warm beige/cream color palette (#F5F3EE background)
+- ✨ Clean, minimal aesthetic
+- 📝 Excellent typography (system fonts)
+- 🎯 Subtle shadows and borders
+- ⚡ Smooth, natural transitions
+
+See **[CLAUDE_DESIGN_SYSTEM.md](CLAUDE_DESIGN_SYSTEM.md)** for complete design documentation.
 
 ---
 
 **Built with ❤️ for the AWS AI Agent Global Hackathon 2025**
 
-Questions? Issues? Open a GitHub issue or reach out!
+Questions? Issues? Check the documentation or open a GitHub issue!
 
-**Good luck with your demo! 🎉**
+**Good luck with your deployment! 🚀**

@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IShowSpeed Backflip Counter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0e0e10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        video {
+            width: 100%;
+            display: block;
+        }
+        
+        /* Backflip Counter Overlay */
+        .counter-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.95), rgba(75, 0, 130, 0.95));
+            padding: 20px 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(138, 43, 226, 0.4);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.5s ease-out;
+            z-index: 10;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .counter-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .counter-value {
+            font-size: 56px;
+            font-weight: bold;
+            color: #ffffff;
+            text-align: center;
+            line-height: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .counter-emoji {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .status-text {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* Streamer Info */
+        .streamer-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .streamer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #8a2be2;
+        }
+        
+        .streamer-details {
+            color: white;
+        }
+        
+        .streamer-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .streamer-category {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Detection Alert */
+        .detection-alert {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 10;
+        }
+        
+        .detection-alert.show {
+            opacity: 1;
+            animation: detectBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes detectBounce {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .detection-alert-emoji {
+            font-size: 80px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .detection-alert-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Backflip Gallery */
+        .backflip-gallery {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .backflip-gallery.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .gallery-title {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .gallery-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .gallery-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .gallery-item-info {
+            padding: 12px;
+        }
+        
+        .gallery-item-time {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .gallery-item-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        .gallery-item-play {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .gallery-item-play:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Controls */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .control-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #8a2be2, #4b0082);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .control-btn.analyzing {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+        }
+        
+        /* Info Panel */
+        .info-panel {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Commentary Box */
+        .commentary-box {
+            margin-top: 20px;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(75, 0, 130, 0.1));
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(138, 43, 226, 0.3);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .commentary-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8a2be2;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .commentary-line {
+            color: white;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInComment 0.3s ease-out;
+        }
+        
+        .commentary-line:last-child {
+            border-bottom: none;
+        }
+        
+        .commentary-timestamp {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .commentary-text {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        @keyframes fadeInComment {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .info-value {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="video-wrapper">
+            <video id="video-player" preload="auto" controls>
+                <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+            </video>
+            
+            <!-- Backflip Counter Overlay -->
+            <div class="counter-overlay">
+                <div class="counter-emoji">🤸</div>
+                <div class="counter-label">Backflips Detected</div>
+                <div class="counter-value" id="counter-value">0</div>
+            </div>
+            
+            <!-- Status Badge -->
+            <div class="status-badge">
+                <div class="status-indicator"></div>
+                <div class="status-text">AI Analysis Active</div>
+            </div>
+            
+            <!-- Streamer Info -->
+            <div class="streamer-info">
+                <img src="https://i.redd.it/h62uj8viu3cd1.jpeg" alt="IShowSpeed" class="streamer-avatar" onerror="this.src='https://via.placeholder.com/50'">
+                <div class="streamer-details">
+                    <div class="streamer-name">⚡ IShowSpeed</div>
+                    <div class="streamer-category">Just Chatting • Live</div>
+                </div>
+            </div>
+            
+            <!-- Detection Alert -->
+            <div class="detection-alert" id="detection-alert">
+                <div class="detection-alert-emoji">🎪</div>
+                <div class="detection-alert-text">BACKFLIP DETECTED!</div>
+            </div>
+            
+            <!-- Backflip Gallery -->
+            <div class="backflip-gallery" id="backflip-gallery">
+                <h3 class="gallery-title">📸 Detected Backflips</h3>
+                <div class="gallery-items" id="gallery-items"></div>
+            </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+            <button class="control-btn" id="analyze-btn">🔍 Analyze Video</button>
+            <button class="control-btn" id="reset-btn">🔄 Reset Counter</button>
+        </div>
+        
+        <!-- Commentary Box -->
+        <div class="commentary-box" id="commentary-box">
+            <div class="commentary-title">
+                🎙️ Live Commentary
+            </div>
+            <div id="commentary-content">
+                <div class="commentary-line">
+                    <span class="commentary-text">Waiting for analysis to start...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Panel -->
+        <div class="info-panel">
+            <div class="info-row">
+                <span class="info-label">Video Duration:</span>
+                <span class="info-value" id="duration">--:--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Frames Analyzed:</span>
+                <span class="info-value" id="frames-analyzed">0</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Frames Skipped:</span>
+                <span class="info-value" id="frames-skipped" style="color: #00ff00;">0</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Speed Gain:</span>
+                <span class="info-value" id="speed-gain" style="color: #00ff00;">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Detection Confidence:</span>
+                <span class="info-value" id="confidence">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Last Detection:</span>
+                <span class="info-value" id="last-detection">None</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const video = document.getElementById('video-player');
+        const counterValue = document.getElementById('counter-value');
+        const detectionAlert = document.getElementById('detection-alert');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const durationEl = document.getElementById('duration');
+        const framesAnalyzedEl = document.getElementById('frames-analyzed');
+        const framesSkippedEl = document.getElementById('frames-skipped');
+        const speedGainEl = document.getElementById('speed-gain');
+        const confidenceEl = document.getElementById('confidence');
+        const lastDetectionEl = document.getElementById('last-detection');
+        
+        let backflipCount = 0;
+        let isAnalyzing = false;
+        
+        // Update video duration
+        video.addEventListener('loadedmetadata', () => {
+            const minutes = Math.floor(video.duration / 60);
+            const seconds = Math.floor(video.duration % 60);
+            durationEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        });
+        
+        // Add commentary
+        function addCommentary(message, commentary) {
+            const commentaryContent = document.getElementById('commentary-content');
+            const line = document.createElement('div');
+            line.className = 'commentary-line';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            line.innerHTML = `
+                <span class="commentary-timestamp">[${timestamp}]</span>
+                <span class="commentary-text">${message} - ${commentary}</span>
+            `;
+            
+            commentaryContent.appendChild(line);
+            commentaryContent.scrollTop = commentaryContent.scrollHeight;
+        }
+        
+        function addToGallery(backflipData) {
+            const galleryEl = document.getElementById('backflip-gallery');
+            const galleryItemsEl = document.getElementById('gallery-items');
+            
+            // Show gallery
+            galleryEl.classList.add('active');
+            
+            // Create gallery item
+            const item = document.createElement('div');
+            item.className = 'gallery-item';
+            
+            const screenshot = backflipData.screenshot || '/uploads/placeholder.jpg';
+            const timestamp = backflipData.timestamp;
+            const time = backflipData.time;
+            const label = backflipData.label || 'Backflip';
+            const confidence = Math.round(backflipData.confidence * 100);
+            
+            item.innerHTML = `
+                <img src="${screenshot}" alt="Backflip at ${time}" onerror="this.src='https://via.placeholder.com/200x120?text=Backflip'">
+                <div class="gallery-item-info">
+                    <div class="gallery-item-time">⏱️ ${time}</div>
+                    <div class="gallery-item-label">${label} (${confidence}%)</div>
+                    <button class="gallery-item-play" onclick="jumpToTimestamp(${timestamp})">
+                        ▶️ Play Moment
+                    </button>
+                </div>
+            `;
+            
+            galleryItemsEl.appendChild(item);
+        }
+        
+        function jumpToTimestamp(timestamp) {
+            const video = document.getElementById('video-player');
+            video.currentTime = timestamp;
+            video.play();
+            
+            // Scroll to video
+            video.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Visual feedback
+            const videoContainer = video.parentElement;
+            videoContainer.style.boxShadow = '0 0 30px rgba(102, 126, 234, 0.8)';
+            setTimeout(() => {
+                videoContainer.style.boxShadow = '';
+            }, 1000);
+        }
+        
+        // Analyze video button with streaming
+        analyzeBtn.addEventListener('click', () => {
+            if (isAnalyzing) return;
+            
+            isAnalyzing = true;
+            analyzeBtn.textContent = '⏳ Analyzing...';
+            analyzeBtn.classList.add('analyzing');
+            
+            // Clear previous commentary
+            const commentaryContent = document.getElementById('commentary-content');
+            commentaryContent.innerHTML = '';
+            
+            // Use EventSource for Server-Sent Events
+            const eventSource = new EventSource('/api/analyze-video-stream?' + new URLSearchParams({
+                video_path: '/uploads/1760892120_tets.mp4'
+            }));
+            
+            eventSource.onmessage = async (event) => {
+                const data = JSON.parse(event.data);
+                
+                switch (data.type) {
+                    case 'start':
+                    case 'info':
+                        addCommentary(data.message, data.commentary);
+                        break;
+                    
+                    case 'progress':
+                        addCommentary(data.message, data.commentary);
+                        // Update frame counter in real-time
+                        if (data.frames_analyzed !== undefined) {
+                            framesAnalyzedEl.textContent = data.frames_analyzed;
+                        }
+                        break;
+                    
+                    case 'heartbeat':
+                        // Show heartbeat without adding to commentary (too many messages)
+                        // Just update the last line
+                        const lastLine = commentaryContent.querySelector('.commentary-line:last-child .commentary-text');
+                        if (lastLine) {
+                            lastLine.textContent = `${data.message} - ${data.commentary}`;
+                        }
+                        break;
+                    
+                    case 'skip':
+                    case 'duplicate':
+                    case 'context':
+                        addCommentary(data.message, data.commentary);
+                        break;
+                    
+                    case 'detection':
+                        // Backflip detected!
+                        addCommentary(data.message, data.commentary);
+                        await incrementCounter(data.data);
+                        addToGallery(data.data);
+                        break;
+                    
+                    case 'complete':
+                        addCommentary(data.message, data.commentary);
+                        
+                        // Update final stats
+                        const finalData = data.data;
+                        framesAnalyzedEl.textContent = finalData.frames_analyzed || 0;
+                        framesSkippedEl.textContent = finalData.frames_skipped || 0;
+                        speedGainEl.textContent = finalData.speed_gain_percent 
+                            ? `${finalData.speed_gain_percent}% faster ⚡` 
+                            : '--';
+                        
+                        if (finalData.backflips && finalData.backflips.length > 0) {
+                            confidenceEl.textContent = `${(finalData.backflips[0].confidence * 100).toFixed(1)}%`;
+                            lastDetectionEl.textContent = `${finalData.backflips[finalData.backflips.length - 1].timestamp.toFixed(2)}s`;
+                        }
+                        
+                        // Close stream
+                        eventSource.close();
+                        isAnalyzing = false;
+                        analyzeBtn.textContent = '🔍 Analyze Video';
+                        analyzeBtn.classList.remove('analyzing');
+                        break;
+                    
+                    case 'error':
+                        addCommentary(data.message, data.commentary);
+                        eventSource.close();
+                        isAnalyzing = false;
+                        analyzeBtn.textContent = '🔍 Analyze Video';
+                        analyzeBtn.classList.remove('analyzing');
+                        break;
+                }
+            };
+            
+            eventSource.onerror = (error) => {
+                console.error('Stream error:', error);
+                addCommentary('❌ Stream error', 'Connection lost');
+                eventSource.close();
+                isAnalyzing = false;
+                analyzeBtn.textContent = '🔍 Analyze Video';
+                analyzeBtn.classList.remove('analyzing');
+            };
+        });
+        
+        // Reset counter button
+        resetBtn.addEventListener('click', () => {
+            counterValue.textContent = '0';
+            framesAnalyzedEl.textContent = '0';
+            framesSkippedEl.textContent = '0';
+            speedGainEl.textContent = '0%';
+            const commentaryContent = document.getElementById('commentary-content');
+            commentaryContent.innerHTML = '<div class="commentary-line"><span class="commentary-text">Commentary will appear here...</span></div>';
+            
+            // Clear gallery
+            const galleryEl = document.getElementById('backflip-gallery');
+            const galleryItemsEl = document.getElementById('gallery-items');
+            galleryEl.classList.remove('active');
+            galleryItemsEl.innerHTML = '';
+        });
+        
+        // Increment counter with animation
+        async function incrementCounter(backflipData) {
+            backflipCount++;
+            
+            // Update counter display
+            counterValue.style.transform = 'scale(1.3)';
+            counterValue.textContent = backflipCount;
+            
+            // Show detection alert
+            detectionAlert.classList.add('show');
+            
+            // Seek to backflip timestamp if available
+            if (backflipData && backflipData.timestamp) {
+                video.currentTime = backflipData.timestamp;
+                video.play();
+            }
+            
+            setTimeout(() => {
+                counterValue.style.transform = 'scale(1)';
+            }, 300);
+            
+            setTimeout(() => {
+                detectionAlert.classList.remove('show');
+            }, 2000);
+        }
+        
+        function updateCounter() {
+            counterValue.textContent = backflipCount;
+        }
+        
+        // Extension Integration
+        window.STREAMBET_PAGE_DATA = {
+            platform: 'streambet',
+            streamer: 'IShowSpeed',
+            isLive: true,
+            showCounter: true,
+            backflipCount: backflipCount
+        };
+        
+        // Notify extension
+        window.dispatchEvent(new CustomEvent('streambet:counter-update', {
+            detail: { count: backflipCount }
+        }));
+        
+        console.log('🎪 Backflip Counter App Ready!');
+    </script>
+</body>
+</html>

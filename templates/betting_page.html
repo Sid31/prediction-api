@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamBet - IShowSpeed Backflip Prediction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .bet-banner {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .bet-banner h1 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .bet-question {
+            font-size: 1.8em;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .bet-status {
+            display: inline-block;
+            background: #00ff00;
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        
+        video {
+            width: 100%;
+            display: block;
+        }
+        
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .play-overlay.hidden {
+            display: none;
+        }
+        
+        .play-button {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 5px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .play-overlay:hover .play-button {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-left: 40px solid white;
+            border-top: 25px solid transparent;
+            border-bottom: 25px solid transparent;
+            margin-left: 10px;
+        }
+        
+        .play-message {
+            font-size: 1.5em;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .play-submessage {
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .video-info {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+        
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2em;
+        }
+        
+        .extension-prompt {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .extension-prompt h3 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Bet Banner -->
+        <div class="bet-banner">
+            <h1>🎯 Live Prediction</h1>
+            <div class="bet-question">
+                Will IShowSpeed do a backflip in this stream?
+            </div>
+            <div class="bet-status">● LIVE BETTING ACTIVE</div>
+        </div>
+        
+        <!-- Video Player -->
+        <div class="video-container">
+            <video id="video-player" preload="auto">
+                <source src="https://YOUR_S3_BUCKET.s3.amazonaws.com/test.mp4" type="video/mp4">
+                <!-- Fallback to local if S3 not configured -->
+                <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+            </video>
+            
+            <div class="play-overlay" id="play-overlay">
+                <div class="play-button">
+                    <div class="play-icon"></div>
+                </div>
+                <div class="play-message">Place a bet to watch</div>
+                <div class="play-submessage">Click to preview • Use extension to bet</div>
+            </div>
+        </div>
+        
+        <!-- Video Info -->
+        <div class="video-info">
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Streamer</div>
+                    <div class="info-value">⚡ IShowSpeed</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Prediction Type</div>
+                    <div class="info-value">🤸 Backflip</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Betting Odds</div>
+                    <div class="info-value">2.5x</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">AI Confidence</div>
+                    <div class="info-value">99.9%</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Extension Prompt -->
+        <div class="extension-prompt">
+            <h3>💡 Install StreamBet Extension to Place Bets</h3>
+            <p>Click the video to preview. Install our Chrome extension to place bets and win!</p>
+        </div>
+    </div>
+    
+    <script>
+        const video = document.getElementById('video-player');
+        const playOverlay = document.getElementById('play-overlay');
+        
+        // Handle play button click
+        playOverlay.addEventListener('click', () => {
+            video.play();
+            playOverlay.classList.add('hidden');
+        });
+        
+        // Show overlay when video pauses
+        video.addEventListener('pause', () => {
+            if (!video.ended) {
+                playOverlay.classList.remove('hidden');
+            }
+        });
+        
+        // Hide overlay when playing
+        video.addEventListener('play', () => {
+            playOverlay.classList.add('hidden');
+        });
+        
+        // Preload video
+        video.load();
+        
+        // StreamBet Extension Integration
+        window.STREAMBET_PAGE_DATA = {
+            platform: 'streambet',
+            streamer: 'IShowSpeed',
+            isLive: true,
+            prediction: {
+                id: 'ishowspeed_backflip_live',
+                question: 'Will IShowSpeed do a backflip in this stream?',
+                options: ['Yes', 'No'],
+                video_url: window.location.origin + '/uploads/1760892120_tets.mp4',
+                video_id: 'ishowspeed_live_' + Date.now(),
+                ends_at: Date.now() + 300000, // 5 minutes
+                detection_config: {
+                    labels: ['fighting', 'sport', 'jumping', 'backflip', 'acrobatics', 'flip'],
+                    confidence: 0.7,
+                    time_window: [17, 23] // Backflip happens at 19.69s
+                },
+                odds: {
+                    yes: 2.5,
+                    no: 1.5
+                }
+            }
+        };
+        
+        // Notify extension that page is ready
+        window.dispatchEvent(new CustomEvent('streambet:page-ready', {
+            detail: window.STREAMBET_PAGE_DATA
+        }));
+        
+        console.log('🎮 StreamBet Betting Page Ready');
+        console.log('📡 Prediction:', window.STREAMBET_PAGE_DATA.prediction.question);
+        console.log('🎯 Video:', window.STREAMBET_PAGE_DATA.prediction.video_url);
+        
+        // Log when video is loaded
+        video.addEventListener('loadeddata', () => {
+            console.log('✅ Video loaded and ready');
+            console.log('⏱️  Duration:', video.duration.toFixed(2) + 's');
+        });
+        
+        // Check if extension is present
+        setTimeout(() => {
+            if (!document.getElementById('streambet-prediction-overlay')) {
+                console.log('💡 Extension not detected. Install StreamBet extension to place bets!');
+            } else {
+                console.log('✅ Extension detected! Betting UI should be visible.');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

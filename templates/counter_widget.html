@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Counter Widget - StreamBet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            padding: 20px;
+        }
+        
+        .widget-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        .video-player {
+            width: 100%;
+            display: block;
+        }
+        
+        .overlay-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px 30px;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            animation: slideInRight 0.5s ease;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .overlay-counter .counter-label {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .overlay-counter .counter-value {
+            font-size: 64px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            line-height: 1;
+            margin: 10px 0;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+        }
+        
+        .overlay-counter .counter-status {
+            font-size: 12px;
+            color: #38ef7d;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .overlay-counter .counter-status.live::before {
+            content: "🔴 ";
+            animation: blink 1s infinite;
+        }
+        
+        .overlay-stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+        
+        .overlay-stat {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            flex: 1;
+        }
+        
+        .overlay-stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+        
+        .overlay-stat-label {
+            font-size: 11px;
+            color: #aaa;
+            text-align: center;
+            margin-top: 3px;
+        }
+        
+        .overlay-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .overlay-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .widget-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .widget-header h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .widget-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .counter-display {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 15px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .counter-label {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .counter-value {
+            font-size: 96px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin: 15px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .counter-status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .counter-status.live {
+            color: #38ef7d;
+            font-weight: 600;
+        }
+        
+        .counter-status.live::before {
+            content: "🔴 ";
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .chat-input-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .chat-input-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .quick-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .quick-btn {
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid #667eea;
+            border-radius: 6px;
+            color: #667eea;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .video-input {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .video-input h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .video-url-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #38ef7d 0%, #11998e 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .embed-code-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .embed-code-section h4 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .embed-code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            cursor: pointer;
+        }
+        
+        .embed-code:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .stats-mini {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .stat-mini {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-mini-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-mini-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="widget-header">
+            <h2>📊 Live Counter Widget</h2>
+            <p>AI-Powered Real-Time Detection</p>
+        </div>
+        
+        <!-- Video with Overlay Counter -->
+        <div class="video-wrapper">
+            <video id="video-player" class="video-player" controls>
+                <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+            </video>
+            
+            <!-- Counter Overlay (Top Right) -->
+            <div class="overlay-counter" id="overlay-counter" style="display: none;">
+                <div class="counter-label" id="counter-label">Configure Counter</div>
+                <div class="counter-value" id="counter-value">—</div>
+                <div class="counter-status" id="counter-status">Ready to start</div>
+            </div>
+            
+            <!-- Stats Overlay (Bottom) -->
+            <div class="overlay-stats" id="overlay-stats" style="display: none;">
+                <div class="overlay-stat">
+                    <div class="overlay-stat-value" id="frames-analyzed">0</div>
+                    <div class="overlay-stat-label">Frames Analyzed</div>
+                </div>
+                <div class="overlay-stat">
+                    <div class="overlay-stat-value" id="detection-rate">0%</div>
+                    <div class="overlay-stat-label">Detection Rate</div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar (Bottom) -->
+            <div class="overlay-progress" id="overlay-progress" style="display: none;">
+                <div class="overlay-progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+        
+        <div class="chat-input-section">
+            <h4>💬 What to count?</h4>
+            <input 
+                type="text" 
+                class="chat-input" 
+                id="chat-input" 
+                placeholder="E.g., 'roller coasters' or 'game kills'"
+            >
+            <div class="quick-options">
+                <button class="quick-btn" onclick="setCounter('roller coasters')">🎢 Roller Coasters</button>
+                <button class="quick-btn" onclick="setCounter('backflips')">🎪 Backflips</button>
+                <button class="quick-btn" onclick="setCounter('game kills')">🎮 Game Kills</button>
+                <button class="quick-btn" onclick="setCounter('people')">👥 People</button>
+            </div>
+            <button class="btn btn-primary" id="configure-btn" onclick="configureCounter()">
+                ✅ Configure Counter
+            </button>
+        </div>
+        
+        <div class="video-input">
+            <button class="btn btn-primary" id="start-btn" onclick="startCounting()" disabled>
+                🚀 Start Counting & Play Video
+            </button>
+        </div>
+        
+        <div class="embed-code-section">
+            <h4>📋 Embed Code</h4>
+            <div class="embed-code" onclick="copyEmbedCode()">
+                &lt;iframe src="http://localhost:5000/widget" width="1200" height="800"&gt;&lt;/iframe&gt;
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentConfig = null;
+        let isRunning = false;
+        let totalCount = 0;
+        let framesAnalyzed = 0;
+        let detections = 0;
+        
+        function setCounter(type) {
+            document.getElementById('chat-input').value = type;
+        }
+        
+        async function configureCounter() {
+            const input = document.getElementById('chat-input').value.trim();
+            
+            if (!input) {
+                alert('Please enter what you want to count!');
+                return;
+            }
+            
+            const configureBtn = document.getElementById('configure-btn');
+            configureBtn.disabled = true;
+            configureBtn.textContent = '⏳ Configuring...';
+            
+            try {
+                // Call API to generate config
+                const response = await fetch('/api/configure-detection', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        intent: `Count ${input}`
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentConfig = data.config;
+                    
+                    // Show overlay counter
+                    const overlayCounter = document.getElementById('overlay-counter');
+                    overlayCounter.style.display = 'block';
+                    
+                    // Update display
+                    document.getElementById('counter-label').textContent = data.config.target;
+                    document.getElementById('counter-value').textContent = '0';
+                    document.getElementById('counter-status').textContent = 'Ready to count!';
+                    
+                    // Enable start button
+                    document.getElementById('start-btn').disabled = false;
+                    
+                    configureBtn.textContent = '✅ Configured!';
+                    setTimeout(() => {
+                        configureBtn.textContent = '✅ Configure Counter';
+                        configureBtn.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error('Configuration failed');
+                }
+                
+            } catch (error) {
+                alert('Error configuring counter. Please try again.');
+                configureBtn.textContent = '✅ Configure Counter';
+                configureBtn.disabled = false;
+            }
+        }
+        
+        async function startCounting() {
+            if (!currentConfig) {
+                alert('Please configure the counter first!');
+                return;
+            }
+            
+            isRunning = true;
+            totalCount = 0;
+            framesAnalyzed = 0;
+            detections = 0;
+            
+            const video = document.getElementById('video-player');
+            const startBtn = document.getElementById('start-btn');
+            const counterStatus = document.getElementById('counter-status');
+            const overlayProgress = document.getElementById('overlay-progress');
+            const progressFill = document.getElementById('progress-fill');
+            const overlayStats = document.getElementById('overlay-stats');
+            
+            // Play video
+            video.currentTime = 0;
+            video.play();
+            
+            // Show overlays
+            overlayProgress.style.display = 'block';
+            overlayStats.style.display = 'flex';
+            
+            startBtn.disabled = true;
+            startBtn.textContent = '⏳ Analyzing...';
+            counterStatus.className = 'counter-status live';
+            counterStatus.textContent = 'LIVE';
+            
+            try {
+                // Use the video source
+                const videoUrl = video.src.split(window.location.origin)[1] || '/uploads/1760892120_tets.mp4';
+                
+                // Start streaming analysis
+                const eventSource = new EventSource(`/api/stream-counter?video_path=${encodeURIComponent(videoUrl)}&query=${encodeURIComponent(currentConfig.query)}`);
+                
+                eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'progress') {
+                        framesAnalyzed = data.frame;
+                        const total = data.total;
+                        const progress = (framesAnalyzed / total) * 100;
+                        
+                        // Sync video to current frame timestamp
+                        if (data.timestamp !== undefined) {
+                            video.currentTime = data.timestamp;
+                        }
+                        
+                        progressFill.style.width = progress + '%';
+                        document.getElementById('frames-analyzed').textContent = framesAnalyzed;
+                        
+                    } else if (data.type === 'detection') {
+                        // Extract count from answer
+                        const numbers = data.answer.match(/\d+/g);
+                        if (numbers) {
+                            const count = parseInt(numbers[0]);
+                            if (!isNaN(count)) {
+                                totalCount = Math.max(totalCount, count);
+                                detections++;
+                                
+                                // Update counter with animation
+                                updateCounter(totalCount);
+                            }
+                        }
+                        
+                        // Update detection rate
+                        const rate = ((detections / framesAnalyzed) * 100).toFixed(0);
+                        document.getElementById('detection-rate').textContent = rate + '%';
+                        
+                    } else if (data.type === 'complete') {
+                        eventSource.close();
+                        
+                        counterStatus.className = 'counter-status';
+                        counterStatus.textContent = `Found ${totalCount}`;
+                        startBtn.textContent = '🚀 Start Counting & Play Video';
+                        startBtn.disabled = false;
+                        isRunning = false;
+                        
+                        // Keep video playing to the end
+                        video.play();
+                    }
+                };
+                
+                eventSource.onerror = () => {
+                    eventSource.close();
+                    counterStatus.className = 'counter-status';
+                    counterStatus.textContent = 'Error occurred';
+                    startBtn.textContent = '🚀 Start Counting';
+                    startBtn.disabled = false;
+                    isRunning = false;
+                };
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error during counting. Please try again.');
+                startBtn.textContent = '🚀 Start Counting';
+                startBtn.disabled = false;
+                isRunning = false;
+            }
+        }
+        
+        function updateCounter(value) {
+            const counterValue = document.getElementById('counter-value');
+            counterValue.textContent = value;
+            
+            // Pulse animation
+            counterValue.style.animation = 'none';
+            setTimeout(() => {
+                counterValue.style.animation = 'pulse 2s infinite';
+            }, 10);
+        }
+        
+        function copyEmbedCode() {
+            const embedCode = '<iframe src="http://localhost:5000/widget" width="1200" height="800"></iframe>';
+            navigator.clipboard.writeText(embedCode);
+            alert('Embed code copied to clipboard!');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Label Discovery - StreamBet AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .video-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 800px;
+            display: block;
+            margin: 0 auto;
+            border-radius: 12px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .frame-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .frame-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .frame-info {
+            padding: 20px;
+        }
+        
+        .frame-timestamp {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .labels-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .label-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .label-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .label-confidence {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .label-high {
+            border-left: 4px solid #38ef7d;
+        }
+        
+        .label-medium {
+            border-left: 4px solid #f5576c;
+        }
+        
+        .label-low {
+            border-left: 4px solid #999;
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Label Discovery Mode</h1>
+            <p>See what AWS Rekognition actually detects in your video</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📖 How to Use:</h3>
+            <ol>
+                <li><strong>Play the video</strong> and find the exact moment of the action (e.g., backflip at 19.7s)</li>
+                <li><strong>Click "Analyze Current Frame"</strong> to see what labels AWS returns</li>
+                <li><strong>Look for labels</strong> with high confidence (>80%)</li>
+                <li><strong>Use those labels</strong> in your detection config</li>
+                <li><strong>Repeat</strong> for different actions/streamers to build your label database</li>
+            </ol>
+        </div>
+        
+        <div class="video-section">
+            <video id="video-player" controls>
+                <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+            </video>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="analyze-frame-btn">🔍 Analyze Current Frame</button>
+                <button class="btn btn-success" id="analyze-all-btn">📊 Analyze All Frames (1/sec)</button>
+                <button class="btn btn-warning" id="clear-btn">🗑️ Clear Results</button>
+            </div>
+        </div>
+        
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="frames-analyzed">0</div>
+                <div class="stat-label">Frames Analyzed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="unique-labels">0</div>
+                <div class="stat-label">Unique Labels Found</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="high-confidence">0</div>
+                <div class="stat-label">High Confidence (>80%)</div>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing frames with AWS Rekognition...</p>
+        </div>
+        
+        <div id="results" class="results-grid"></div>
+    </div>
+    
+    <script>
+        const video = document.getElementById('video-player');
+        const analyzeFrameBtn = document.getElementById('analyze-frame-btn');
+        const analyzeAllBtn = document.getElementById('analyze-all-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const results = document.getElementById('results');
+        const loading = document.getElementById('loading');
+        const stats = document.getElementById('stats');
+        
+        let allLabels = new Set();
+        let framesAnalyzed = 0;
+        let highConfidenceCount = 0;
+        
+        // Analyze current frame
+        analyzeFrameBtn.addEventListener('click', async () => {
+            const timestamp = video.currentTime;
+            await analyzeFrame(timestamp);
+        });
+        
+        // Analyze all frames
+        analyzeAllBtn.addEventListener('click', async () => {
+            if (!confirm('This will analyze every second of the video. This may take 1-2 minutes and cost ~$0.03. Continue?')) {
+                return;
+            }
+            
+            loading.style.display = 'block';
+            analyzeAllBtn.disabled = true;
+            
+            const duration = video.duration;
+            for (let t = 0; t < duration; t += 1) {
+                await analyzeFrame(t, true);
+            }
+            
+            loading.style.display = 'none';
+            analyzeAllBtn.disabled = false;
+        });
+        
+        // Clear results
+        clearBtn.addEventListener('click', () => {
+            results.innerHTML = '';
+            stats.style.display = 'none';
+            allLabels.clear();
+            framesAnalyzed = 0;
+            highConfidenceCount = 0;
+        });
+        
+        async function analyzeFrame(timestamp, batch = false) {
+            try {
+                // Seek to timestamp
+                video.currentTime = timestamp;
+                await new Promise(resolve => {
+                    video.onseeked = resolve;
+                });
+                
+                // Capture frame
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                // Convert to blob
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                
+                // Send to backend
+                const formData = new FormData();
+                formData.append('frame', blob);
+                
+                const response = await fetch('/api/analyze-single-frame', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                // Display results
+                displayFrame(timestamp, canvas.toDataURL(), data.labels);
+                
+                // Update stats
+                framesAnalyzed++;
+                data.labels.forEach(label => {
+                    allLabels.add(label.Name);
+                    if (label.Confidence > 80) {
+                        highConfidenceCount++;
+                    }
+                });
+                
+                updateStats();
+                
+            } catch (error) {
+                console.error('Error analyzing frame:', error);
+                alert('Error analyzing frame: ' + error.message);
+            }
+        }
+        
+        function displayFrame(timestamp, imageData, labels) {
+            const card = document.createElement('div');
+            card.className = 'frame-card';
+            
+            // Sort labels by confidence
+            labels.sort((a, b) => b.Confidence - a.Confidence);
+            
+            const labelsHTML = labels.map(label => {
+                const confidence = label.Confidence.toFixed(1);
+                const className = confidence > 80 ? 'label-high' : confidence > 60 ? 'label-medium' : 'label-low';
+                return `
+                    <div class="label-item ${className}">
+                        <span class="label-name">${label.Name}</span>
+                        <span class="label-confidence">${confidence}%</span>
+                    </div>
+                `;
+            }).join('');
+            
+            card.innerHTML = `
+                <img src="${imageData}" alt="Frame at ${timestamp.toFixed(2)}s">
+                <div class="frame-info">
+                    <div class="frame-timestamp">⏱️ ${timestamp.toFixed(2)}s</div>
+                    <div class="labels-list">
+                        ${labelsHTML}
+                    </div>
+                </div>
+            `;
+            
+            // Insert at top
+            results.insertBefore(card, results.firstChild);
+            
+            // Scroll to it
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        function updateStats() {
+            stats.style.display = 'grid';
+            document.getElementById('frames-analyzed').textContent = framesAnalyzed;
+            document.getElementById('unique-labels').textContent = allLabels.size;
+            document.getElementById('high-confidence').textContent = highConfidenceCount;
+        }
+    </script>
+</body>
+</html>

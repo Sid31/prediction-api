@@ -1,0 +1,14 @@
+{
+  "s3_bucket": "YOUR_S3_BUCKET_NAME",
+  "s3_region": "us-east-1",
+  "video_file": "test.mp4",
+  "video_url": "https://YOUR_S3_BUCKET.s3.amazonaws.com/test.mp4",
+  "fallback_url": "/uploads/1760892120_tets.mp4",
+  "notes": [
+    "To use S3 video:",
+    "1. Upload your video to S3 bucket",
+    "2. Make bucket public or configure CORS",
+    "3. Update 'video_url' with your S3 URL",
+    "4. Restart Flask server"
+  ]
+}

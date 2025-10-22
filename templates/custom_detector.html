@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom AI Detector - StreamBet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .video-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 800px;
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 12px;
+        }
+        
+        .query-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .query-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .query-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .query-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .example-btn {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            text-align: left;
+        }
+        
+        .example-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .results {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-item {
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-timestamp {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .result-query {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .result-answer {
+            font-size: 18px;
+            color: #000;
+            line-height: 1.6;
+        }
+        
+        .result-screenshot {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .counter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .counter-value {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .counter-label {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Custom AI Detector</h1>
+            <p>Ask anything about your video - powered by Claude 3 Vision</p>
+        </div>
+        
+        <div class="video-section">
+            <video id="video-player" controls>
+                <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+            </video>
+            
+            <div class="query-section">
+                <h3>💬 Ask a Question:</h3>
+                
+                <textarea 
+                    id="query-input" 
+                    class="query-input" 
+                    placeholder="Example: How many people are wearing red shirts in this frame?"
+                ></textarea>
+                
+                <div class="query-examples">
+                    <button class="example-btn" data-query="How many people are wearing red shirts?">
+                        👕 Count red shirts
+                    </button>
+                    <button class="example-btn" data-query="Is anyone doing a backflip or acrobatic move?">
+                        🎪 Detect backflip
+                    </button>
+                    <button class="example-btn" data-query="Describe what's happening in this scene in one sentence.">
+                        📝 Describe scene
+                    </button>
+                    <button class="example-btn" data-query="Are there more than 5 people visible?">
+                        👥 Count people
+                    </button>
+                    <button class="example-btn" data-query="What is the main person in the center doing?">
+                        🎯 Main action
+                    </button>
+                    <button class="example-btn" data-query="What color is the main person's shirt?">
+                        🎨 Detect color
+                    </button>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="analyze-frame-btn">
+                    🔍 Analyze Current Frame
+                </button>
+                <button class="btn btn-success" id="analyze-all-btn">
+                    📊 Track Across All Frames (1/sec)
+                </button>
+            </div>
+        </div>
+        
+        <div id="counter" class="counter" style="display: none;">
+            <div class="counter-label">Detected Count</div>
+            <div class="counter-value" id="counter-value">0</div>
+            <div class="counter-label" id="counter-description">—</div>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>AI is analyzing the video...</p>
+        </div>
+        
+        <div id="results" class="results"></div>
+    </div>
+    
+    <script>
+        const video = document.getElementById('video-player');
+        const queryInput = document.getElementById('query-input');
+        const analyzeFrameBtn = document.getElementById('analyze-frame-btn');
+        const analyzeAllBtn = document.getElementById('analyze-all-btn');
+        const results = document.getElementById('results');
+        const loading = document.getElementById('loading');
+        const counter = document.getElementById('counter');
+        const counterValue = document.getElementById('counter-value');
+        const counterDescription = document.getElementById('counter-description');
+        
+        // Example button clicks
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                queryInput.value = btn.dataset.query;
+            });
+        });
+        
+        // Analyze current frame
+        analyzeFrameBtn.addEventListener('click', async () => {
+            const query = queryInput.value.trim();
+            if (!query) {
+                alert('Please enter a question!');
+                return;
+            }
+            
+            await analyzeFrame(video.currentTime, query);
+        });
+        
+        // Analyze all frames
+        analyzeAllBtn.addEventListener('click', async () => {
+            const query = queryInput.value.trim();
+            if (!query) {
+                alert('Please enter a question to track across the video!');
+                return;
+            }
+            
+            if (!confirm(`This will analyze every second with your question. Cost: ~$0.50 per 30s video. Continue?`)) {
+                return;
+            }
+            
+            loading.style.display = 'block';
+            analyzeAllBtn.disabled = true;
+            results.classList.add('show');
+            
+            // Check if query is asking for a count
+            const isCountQuery = query.toLowerCase().includes('how many') || 
+                                query.toLowerCase().includes('count');
+            
+            if (isCountQuery) {
+                counter.style.display = 'block';
+                counterValue.textContent = '0';
+                counterDescription.textContent = 'Counting...';
+            }
+            
+            let totalCount = 0;
+            const duration = video.duration;
+            
+            for (let t = 0; t < duration; t += 1) {
+                const result = await analyzeFrame(t, query, true);
+                
+                // Try to extract number from response
+                if (isCountQuery && result) {
+                    const numbers = result.match(/\d+/g);
+                    if (numbers) {
+                        const count = parseInt(numbers[0]);
+                        if (!isNaN(count)) {
+                            totalCount = Math.max(totalCount, count);
+                            counterValue.textContent = totalCount;
+                        }
+                    }
+                }
+            }
+            
+            if (isCountQuery) {
+                counterDescription.textContent = `Maximum detected: ${totalCount}`;
+            }
+            
+            loading.style.display = 'none';
+            analyzeAllBtn.disabled = false;
+        });
+        
+        async function analyzeFrame(timestamp, query, batch = false) {
+            try {
+                // Seek to timestamp
+                video.currentTime = timestamp;
+                await new Promise(resolve => {
+                    video.onseeked = resolve;
+                });
+                
+                // Capture frame
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                // Convert to blob
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                
+                // Send to backend
+                const formData = new FormData();
+                formData.append('frame', blob);
+                formData.append('query', query);
+                
+                const response = await fetch('/api/analyze-with-ai', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResult(timestamp, query, data.answer, canvas.toDataURL());
+                    return data.answer;
+                } else {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                if (!batch) {
+                    alert('Error: ' + error.message);
+                }
+                return null;
+            }
+        }
+        
+        function displayResult(timestamp, query, answer, imageData) {
+            results.classList.add('show');
+            
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            resultItem.innerHTML = `
+                <div class="result-timestamp">⏱️ ${timestamp.toFixed(2)}s</div>
+                <div class="result-query">❓ ${query}</div>
+                <div class="result-answer">💡 ${answer}</div>
+                <img src="${imageData}" class="result-screenshot" alt="Frame">
+            `;
+            
+            results.insertBefore(resultItem, results.firstChild);
+            resultItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>

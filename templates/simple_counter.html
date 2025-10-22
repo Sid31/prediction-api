@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Counter - StreamBet</title>
+    <style>
+        /* Claude Anthropic Inspired Design */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #F5F3EE;
+            padding: 32px 20px;
+            color: #2D2A26;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: #2D2A26;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: #6B6662;
+            font-weight: 400;
+        }
+        
+        .counter-selector {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        
+        .counter-btn {
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border: 1.5px solid #D4CFC7;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: #2D2A26;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .counter-btn:hover {
+            background: #FAFAF8;
+            border-color: #A39D94;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .counter-btn.active {
+            background: #2D2A26;
+            color: #F5F3EE;
+            border-color: #2D2A26;
+            box-shadow: 0 2px 12px rgba(45, 42, 38, 0.15);
+        }
+        
+        .upload-section {
+            background: #FFFFFF;
+            border: 1.5px dashed #D4CFC7;
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            margin: 24px 0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .upload-section:hover {
+            background: #FAFAF8;
+            border-color: #A39D94;
+        }
+        
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+            border: 1px solid #E8E4DD;
+        }
+        
+        video {
+            width: 100%;
+            display: block;
+        }
+        
+        .counter-overlay {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 24px 32px;
+            min-width: 220px;
+            border: 1px solid rgba(212, 207, 199, 0.6);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .counter-label {
+            text-align: center;
+            font-size: 12px;
+            color: #6B6662;
+            font-weight: 500;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .counter-value {
+            text-align: center;
+            font-size: 72px;
+            font-weight: 600;
+            color: #2D2A26;
+            line-height: 1;
+            margin: 16px 0;
+            letter-spacing: -2px;
+        }
+        
+        .counter-value.live {
+            color: #D97706;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .counter-status {
+            text-align: center;
+            font-size: 13px;
+            color: #D97706;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        
+        .counter-status.live::before {
+            content: "● ";
+            animation: blink 2s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.4; }
+        }
+        
+        .stats-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(212, 207, 199, 0.6);
+        }
+        
+        .stat {
+            color: #2D2A26;
+            font-size: 13px;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #D97706;
+            margin-left: 6px;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .start-btn {
+            padding: 14px 40px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #2D2A26;
+            color: #F5F3EE;
+            border: 1.5px solid #2D2A26;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(45, 42, 38, 0.1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin: 24px auto;
+            display: block;
+        }
+        
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 42, 38, 0.15);
+            background: #1A1917;
+        }
+        
+        .start-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Live Detection Counter</h1>
+            <p>AI-powered video analysis with real-time commentary</p>
+        </div>
+        
+        <div class="counter-selector">
+            <button class="counter-btn active" onclick="selectCounter('backflips', '🎪 Backflips')">
+                🎪 Backflips
+            </button>
+            <button class="counter-btn" onclick="selectCounter('roller coasters', '🎢 Roller Coasters')">
+                🎢 Roller Coasters
+            </button>
+            <button class="counter-btn" onclick="selectCounter('people', '👥 People Count')">
+                👥 People
+            </button>
+            <button class="counter-btn" onclick="selectCounter('custom', '💬 Custom Query')">
+                💬 Custom
+            </button>
+        </div>
+        
+        <div id="custom-query-box" style="display: none; margin: 20px auto; max-width: 600px; background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px solid #667eea;">
+            <label style="display: block; margin-bottom: 10px; color: #667eea; font-weight: 600; font-size: 16px;">
+                💬 Ask anything about the video:
+            </label>
+            <textarea id="custom-query-input" placeholder="Examples:&#10;- Is IShowSpeed doing a backflip?&#10;- How many people are wearing hats?&#10;- Is anyone jumping?&#10;- Count the number of cars visible&#10;- Is this indoors or outdoors?" style="width: 100%; min-height: 120px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+            <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                💡 Tip: Be specific! The AI will analyze each frame and answer your question.
+            </div>
+        </div>
+        
+        <div style="margin: 20px 0; text-align: center;">
+            <label style="color: #667eea; font-weight: 600; margin-right: 10px;">Select Video:</label>
+            <select id="video-selector" onchange="changeVideo()" style="padding: 8px 12px; border-radius: 6px; border: 2px solid #667eea; font-size: 14px; background: white; cursor: pointer;">
+                <option value="/uploads/1760892120_tets.mp4">IShowSpeed Video</option>
+                <option value="/uploads/custom-video.mp4">Custom Video (upload your own)</option>
+            </select>
+            <input type="file" id="custom-upload" accept="video/mp4,video/quicktime,video/x-msvideo,.mp4,.mov,.avi" style="display: none;" onchange="uploadVideo()">
+            <button onclick="document.getElementById('custom-upload').click()" style="margin-left: 10px; padding: 8px 16px; background: #2D2A26; color: #F5F3EE; border: 1.5px solid #2D2A26; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);">
+                📤 Upload Video (Max 10MB)
+            </button>
+        </div>
+        
+        <div class="video-wrapper">
+            <video id="video" controls preload="auto">
+                <source src="/uploads/1760892120_tets.mp4" type="video/mp4">
+            </video>
+            
+            <div class="counter-overlay" id="counter-overlay" style="display: none;">
+                <div class="counter-label" id="counter-label">Backflips</div>
+                <div class="counter-value" id="counter-value">0</div>
+                <div class="counter-status" id="counter-status">Ready</div>
+            </div>
+            
+            <!-- Celebrity Detection Widget -->
+            <div id="celebrity-widget" style="display: none; position: absolute; top: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 1000; animation: slideInRight 0.5s ease-out; max-width: 250px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 32px;">⭐</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">Celebrity Detected!</div>
+                        <div id="celebrity-name" style="font-size: 18px; font-weight: 800;"></div>
+                        <div id="celebrity-confidence" style="font-size: 11px; opacity: 0.9; margin-top: 2px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Live Commentary Box -->
+            <div id="commentary-box" style="display: none; position: absolute; top: 120px; left: 20px; right: 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); color: #2D2A26; padding: 16px 20px; border-radius: 12px; border: 1px solid rgba(212, 207, 199, 0.6); box-shadow: 0 4px 16px rgba(0,0,0,0.1); z-index: 998; max-height: 120px; overflow-y: auto;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <div style="font-size: 18px;">🎙️</div>
+                    <div style="font-weight: 600; font-size: 12px; color: #6B6662; letter-spacing: 1px;">LIVE COMMENTARY</div>
+                </div>
+                <div id="commentary-text" style="font-size: 14px; line-height: 1.6; color: #2D2A26;">
+                    AI commentary will appear here during playback...
+                </div>
+            </div>
+            
+            <div class="stats-bar" id="stats-bar" style="display: none;">
+                <div class="stat">
+                    Frame: <span class="stat-value" id="current-frame">0</span>/<span id="total-frames">0</span>
+                </div>
+                <div class="stat">
+                    Detected: <span class="stat-value" id="detections">0</span> times
+                </div>
+            </div>
+            
+            <div class="progress-bar" id="progress-bar" style="display: none;">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div style="display: flex; align-items: center; gap: 15px; justify-content: center; margin-top: 15px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #667eea;">
+                    <input type="checkbox" id="commentary-toggle" checked style="width: 18px; height: 18px; cursor: pointer;">
+                    🎙️ Enable Live Commentary
+                </label>
+            </div>
+            
+            <button class="start-btn" id="start-btn" onclick="startCounting()">
+                🚀 Start Counting & Play Video
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let currentType = 'backflips';
+        let currentLabel = '🎪 Backflips';
+        let isRunning = false;
+        let currentVideoPath = '/uploads/1760892120_tets.mp4';
+        let detectedCelebrities = new Set();
+        let celebrityWidgetTimeout = null;
+        
+        function changeVideo() {
+            const selector = document.getElementById('video-selector');
+            currentVideoPath = selector.value;
+            const video = document.getElementById('video');
+            video.src = currentVideoPath;
+            video.load();
+            console.log('📹 Video changed to:', currentVideoPath);
+        }
+        
+        async function uploadVideo() {
+            const fileInput = document.getElementById('custom-upload');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            // Client-side file size validation (10MB = 10485760 bytes)
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                alert(`❌ File too large (${sizeMB}MB). Maximum size is 10MB.\n\nTip: Use videos under 1 minute for best results.`);
+                fileInput.value = '';
+                return;
+            }
+            
+            // Check file type
+            const allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
+            if (!allowedTypes.includes(file.type)) {
+                alert('❌ Invalid file type. Please upload MP4, MOV, or AVI files only.');
+                fileInput.value = '';
+                return;
+            }
+            
+            console.log('📤 Uploading:', file.name, `(${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
+            
+            const formData = new FormData();
+            formData.append('video', file);
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('✅ Upload successful:', data.file_path, `(${data.size_mb}MB)`);
+                    
+                    // Add to dropdown
+                    const selector = document.getElementById('video-selector');
+                    const option = document.createElement('option');
+                    option.value = data.file_path;
+                    option.text = file.name;
+                    selector.add(option);
+                    selector.value = data.file_path;
+                    
+                    // Load new video
+                    currentVideoPath = data.file_path;
+                    const video = document.getElementById('video');
+                    video.src = currentVideoPath;
+                    video.load();
+                    
+                    alert(`✅ Video uploaded successfully!\nSize: ${data.size_mb}MB`);
+                    
+                    // Clear file input
+                    fileInput.value = '';
+                } else {
+                    alert('❌ Upload failed: ' + data.error);
+                    fileInput.value = '';
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('❌ Upload failed: ' + error.message);
+                fileInput.value = '';
+            }
+        }
+        
+        function selectCounter(type, label) {
+            currentType = type;
+            currentLabel = label;
+            
+            // Update button states
+            document.querySelectorAll('.counter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update counter label
+            document.getElementById('counter-label').textContent = label;
+            
+            // Show/hide custom query box
+            const customBox = document.getElementById('custom-query-box');
+            if (type === 'custom') {
+                customBox.style.display = 'block';
+            } else {
+                customBox.style.display = 'none';
+            }
+            
+            document.getElementById('counter-value').textContent = '0';
+        }
+        
+        function showCelebrityWidget(celebrities) {
+            if (!celebrities || celebrities.length === 0) return;
+            
+            // Parse celebrity string (e.g., "IShowSpeed (99.8% confidence)")
+            const celebrityInfo = celebrities[0];
+            const match = celebrityInfo.match(/^(.+?)\s*\((.+?)\)$/);
+            
+            if (!match) return;
+            
+            const name = match[1];
+            const confidence = match[2];
+            
+            // Only show once per celebrity per session
+            if (detectedCelebrities.has(name)) return;
+            detectedCelebrities.add(name);
+            
+            console.log('⭐ Showing celebrity widget for:', name);
+            
+            const widget = document.getElementById('celebrity-widget');
+            const nameEl = document.getElementById('celebrity-name');
+            const confidenceEl = document.getElementById('celebrity-confidence');
+            
+            nameEl.textContent = name;
+            confidenceEl.textContent = confidence;
+            
+            // Show widget with animation
+            widget.style.display = 'block';
+            widget.style.animation = 'slideInRight 0.5s ease-out, pulse 2s infinite';
+            
+            // Auto-hide after 5 seconds
+            if (celebrityWidgetTimeout) {
+                clearTimeout(celebrityWidgetTimeout);
+            }
+            celebrityWidgetTimeout = setTimeout(() => {
+                widget.style.animation = 'slideInRight 0.5s ease-out reverse';
+                setTimeout(() => {
+                    widget.style.display = 'none';
+                }, 500);
+            }, 5000);
+        }
+        
+        async function startCounting() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            const video = document.getElementById('video');
+            const counterOverlay = document.getElementById('counter-overlay');
+            const statsBar = document.getElementById('stats-bar');
+            const progressBar = document.getElementById('progress-bar');
+            const startBtn = document.getElementById('start-btn');
+            const counterStatus = document.getElementById('counter-status');
+            const counterValue = document.getElementById('counter-value');
+            
+            console.log('🎬 Video element found:', video ? 'YES' : 'NO');
+            console.log('🎯 Counter element found:', counterValue ? 'YES' : 'NO');
+            if (video) {
+                console.log('📺 Video src:', video.src);
+                console.log('📺 Video paused:', video.paused);
+                console.log('📺 Video duration:', video.duration);
+            }
+            
+            // Reset celebrity tracking
+            detectedCelebrities.clear();
+            
+            // Hide celebrity widget if showing
+            const widget = document.getElementById('celebrity-widget');
+            widget.style.display = 'none';
+            
+            // Show/hide commentary box based on toggle
+            const commentaryBox = document.getElementById('commentary-box');
+            if (document.getElementById('commentary-toggle').checked) {
+                commentaryBox.style.display = 'block';
+                document.getElementById('commentary-text').textContent = '🎙️ Getting ready for live commentary...';
+            }
+            
+            // Show overlays
+            counterOverlay.style.display = 'block';
+            statsBar.style.display = 'flex';
+            progressBar.style.display = 'block';
+            
+            // Reset video to start and pause
+            video.currentTime = 0;
+            video.pause();
+            
+            // Update UI
+            startBtn.disabled = true;
+            startBtn.textContent = '⏳ Loading 0%...';
+            counterStatus.className = 'counter-status live';
+            counterStatus.textContent = 'ANALYZING 0%';
+            
+            let maxCount = 0; // Maximum count seen across all frames
+            let totalCount = 0; // Total count across ALL frames (for backflips)
+            let detectionCount = 0;
+            let videoStarted = false; // Track if video has started
+            const commentaryEnabled = document.getElementById('commentary-toggle').checked;
+            
+            // Store all detections with timestamps for video sync
+            const detectionTimeline = [];
+            let lastPlayedAudio = null;
+            
+            // Determine query based on type
+            let query;
+            if (currentType === 'backflips') {
+                query = 'Is IShowSpeed doing a backflip? Check if person is jumping or doing acrobatic action.';
+            } else if (currentType === 'roller coasters') {
+                query = 'How many roller coasters are visible?';
+            } else if (currentType === 'people') {
+                query = 'How many people are in this frame?';
+            } else if (currentType === 'custom') {
+                query = document.getElementById('custom-query-input').value.trim();
+                if (!query) {
+                    alert('⚠️ Please enter a question in the text box!');
+                    startBtn.textContent = '🚀 Start Counting & Play Video';
+                    startBtn.disabled = false;
+                    isRunning = false;
+                    return;
+                }
+            }
+            
+            // Check if this is a backflip/action detection query
+            const isBackflipQuery = currentType === 'backflips' || query.toLowerCase().includes('backflip') || query.toLowerCase().includes('ishowspeed');
+            console.log('🔍 Backflip detection mode:', isBackflipQuery);
+            
+            try {
+                const url = `/api/stream-counter?video_path=${encodeURIComponent(currentVideoPath)}&query=${encodeURIComponent(query)}`;
+                console.log('🔗 Connecting to:', url);
+                console.log('📹 Analyzing video:', currentVideoPath);
+                
+                const eventSource = new EventSource(url);
+                
+                eventSource.onopen = () => {
+                    console.log('✅ EventSource connection opened');
+                };
+                
+                eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    console.log('📊 Received:', data);
+                    
+                    if (data.type === 'connected') {
+                        console.log('✅ Stream connected');
+                        return;
+                    }
+                    
+                    if (data.type === 'progress') {
+                        const frame = data.frame;
+                        const total = data.total;
+                        const progress = (frame / total) * 100;
+                        
+                        // DON'T start video during buffering - wait for 100% complete
+                        // if (!videoStarted && progress >= 50) {
+                        //     console.log('🎬 50% buffered - starting video playback');
+                        //     videoStarted = true;
+                        //     video.play().catch(e => console.log('Video autoplay blocked:', e));
+                        //     counterStatus.textContent = 'LIVE';
+                        //     startBtn.textContent = '▶️ Playing...';
+                        // }
+                        
+                        // Always update buffering UI
+                        if (!videoStarted) {
+                            startBtn.textContent = `⏳ Loading ${Math.round(progress)}%...`;
+                            counterStatus.textContent = `ANALYZING ${Math.round(progress)}%`;
+                        }
+                        
+                        // Don't sync video position - let it play naturally
+                        // Video plays independently while analysis happens in background
+                        
+                        // Update stats
+                        document.getElementById('current-frame').textContent = frame;
+                        document.getElementById('total-frames').textContent = total;
+                        document.getElementById('progress-fill').style.width = progress + '%';
+                        
+                    } else if (data.type === 'detection') {
+                        const count = data.count || 0;
+                        const timestamp = data.timestamp || 0;
+                        
+                        console.log(`📥 Detection received: count=${count}, timestamp=${timestamp.toFixed(1)}s, answer="${data.answer}"`);
+                        
+                        // Store detection in timeline for video-synced playback
+                        detectionTimeline.push({
+                            timestamp: timestamp,
+                            count: count,
+                            commentary: data.commentary,
+                            audio_url: data.audio_url,
+                            celebrities: data.celebrities,
+                            answer: data.answer
+                        });
+                        
+                        console.log(`📊 Stored in timeline: ${detectionTimeline.length} total detections`);
+                        
+                        // Track max/total for final display (don't update counter yet)
+                        if (isBackflipQuery && count > 0) {
+                            totalCount += count;
+                            console.log(`🎯 Backflip mode: totalCount=${totalCount} (stored, not displayed yet)`);
+                        } else if (count > maxCount) {
+                            maxCount = count;
+                            console.log(`📈 Max mode: maxCount=${maxCount}`);
+                        }
+                        
+                        // Track frame detections for stats
+                        if (count > 0) {
+                            detectionCount++;
+                            document.getElementById('detections').textContent = `${detectionCount} frames`;
+                            console.log(`✅ Detection #${detectionCount} at ${timestamp.toFixed(1)}s`);
+                        }
+                        
+                    } else if (data.type === 'complete') {
+                        eventSource.close();
+                        
+                        console.log(`✅ Analysis complete! ${detectionTimeline.length} detections stored`);
+                        
+                        // Sort timeline by timestamp
+                        detectionTimeline.sort((a, b) => a.timestamp - b.timestamp);
+                        
+                        // Always start/resume video when analysis complete
+                        console.log('🎬 Starting video playback... (videoStarted flag was:', videoStarted, ')');
+                        video.play()
+                            .then(() => {
+                                console.log('✅ Video play() succeeded');
+                                console.log('📺 Video paused:', video.paused);
+                                console.log('📺 Video currentTime:', video.currentTime);
+                                console.log('📺 Video readyState:', video.readyState);
+                                videoStarted = true;
+                            })
+                            .catch(e => {
+                                console.error('❌ Video autoplay blocked:', e);
+                                console.log('💡 Click video to start playback');
+                            });
+                        
+                        // Set up video time sync for real-time counter updates
+                        let currentRunningTotal = 0;
+                        let lastDetectionIndex = -1;
+                        
+                        console.log(`🎥 Setting up video timeupdate handler. Timeline has ${detectionTimeline.length} detections`);
+                        console.log(`📋 Timeline preview:`, detectionTimeline.map(d => `${d.timestamp.toFixed(1)}s (count=${d.count})`));
+                        console.log(`🎬 isBackflipQuery=${isBackflipQuery}`);
+                        
+                        // Reset counter to 0 before video plays (green color for live mode)
+                        counterValue.textContent = 0;
+                        counterValue.style.color = '#4ade80'; // Green for live
+                        console.log(`🔄 Counter reset to 0 for video playback`);
+                        
+                        // Test if video timeupdate fires
+                        let updateCount = 0;
+                        
+                        // CRITICAL: Remove any old handler first
+                        if (video.ontimeupdate) {
+                            console.log('⚠️ Removing old ontimeupdate handler');
+                            video.ontimeupdate = null;
+                        }
+                        
+                        // CRITICAL: Log every timeupdate to debug
+                        let firstUpdate = true;
+                        
+                        console.log('🔗 Attaching NEW ontimeupdate handler to video element');
+                        console.log('📺 Video element:', video);
+                        console.log('📺 Video is playing?', !video.paused);
+                        console.log('📺 Video currentTime before handler:', video.currentTime);
+                        
+                        video.ontimeupdate = function(event) {
+                            const currentTime = video.currentTime;
+                            updateCount++;
+                            
+                            // SPAM LOG - Always log to see if this ever fires
+                            console.log(`🔥 ontimeupdate #${updateCount} FIRED! currentTime=${currentTime.toFixed(2)}s`);
+                            
+                            if (firstUpdate) {
+                                firstUpdate = false;
+                                console.log('🎉 ✨✨✨ FIRST TIMEUPDATE EVENT FIRED! Video is playing! ✨✨✨');
+                                console.log('📊 Will check detections against video time');
+                            }
+                            
+                            // Find all detections up to current time
+                            for (let i = lastDetectionIndex + 1; i < detectionTimeline.length; i++) {
+                                const detection = detectionTimeline[i];
+                                
+                                console.log(`🔍 Checking detection ${i}: timestamp=${detection.timestamp.toFixed(1)}s vs currentTime=${currentTime.toFixed(1)}s`);
+                                
+                                if (detection.timestamp <= currentTime) {
+                                    lastDetectionIndex = i;
+                                    
+                                    console.log(`🕐 ✅ Video at ${currentTime.toFixed(1)}s REACHED detection at ${detection.timestamp.toFixed(1)}s (count=${detection.count})`);
+                                    
+                                    // Update counter at this moment
+                                    if (isBackflipQuery && detection.count > 0) {
+                                        currentRunningTotal += detection.count;
+                                        counterValue.textContent = currentRunningTotal;
+                                        counterValue.style.color = '#4ade80'; // Keep green
+                                        console.log(`🎬 ✨✨✨ COUNTER UPDATE! Video ${currentTime.toFixed(1)}s: Backflip! Total: ${currentRunningTotal} ✨✨✨`);
+                                        console.log(`   Detection at ${detection.timestamp.toFixed(1)}s, count=${detection.count}, running total=${currentRunningTotal}`);
+                                        
+                                        // Animation
+                                        counterValue.style.animation = 'none';
+                                        setTimeout(() => {
+                                            counterValue.style.animation = 'glow 2s infinite';
+                                        }, 10);
+                                    } else if (!isBackflipQuery && detection.count > 0) {
+                                        counterValue.textContent = detection.count;
+                                        counterValue.style.color = '#4ade80'; // Green
+                                        console.log(`🎬 COUNTER UPDATE! Video ${currentTime.toFixed(1)}s: Count: ${detection.count}`);
+                                    } else if (detection.count === 0) {
+                                        console.log(`⏭️ Skipped detection at ${detection.timestamp.toFixed(1)}s (count=0)`);
+                                    }
+                                    
+                                    // Show commentary at this time
+                                    if (detection.commentary && commentaryEnabled) {
+                                        const commentaryText = document.getElementById('commentary-text');
+                                        commentaryText.textContent = `"${detection.commentary}"`;
+                                        commentaryText.style.animation = 'fadeIn 0.5s';
+                                    }
+                                    
+                                    // Play audio at this time (only once)
+                                    if (detection.audio_url && commentaryEnabled) {
+                                        if (lastPlayedAudio !== detection.audio_url) {
+                                            console.log('🔊 Playing synced audio:', detection.audio_url);
+                                            const audio = new Audio(detection.audio_url);
+                                            audio.volume = 0.8;
+                                            audio.play().catch(e => console.log('Audio play failed:', e));
+                                            lastPlayedAudio = detection.audio_url;
+                                        }
+                                    }
+                                    
+                                    // Show celebrities
+                                    if (detection.celebrities && detection.celebrities.length > 0) {
+                                        showCelebrityWidget(detection.celebrities);
+                                    }
+                                } else {
+                                    console.log(`⏸️ Detection ${i} at ${detection.timestamp.toFixed(1)}s is in future, stopping check`);
+                                    break; // Future detection, stop checking
+                                }
+                            }
+                        };
+                        
+                        console.log('✅ ontimeupdate handler attached!');
+                        console.log('🎬 Ensuring video is playing...');
+                        
+                        // Ensure video is playing
+                        if (video.paused) {
+                            console.log('⚠️ Video is paused! Starting it now...');
+                            video.play().catch(e => console.error('Play failed:', e));
+                        } else {
+                            console.log('✅ Video is already playing');
+                        }
+                        
+                        counterStatus.className = 'counter-status live';
+                        counterStatus.textContent = 'LIVE';
+                        startBtn.textContent = '▶️ Playing...';
+                        
+                        // When video ends, show final status
+                        video.onended = function() {
+                            counterStatus.className = 'counter-status';
+                            if (isBackflipQuery) {
+                                counterStatus.textContent = `Total: ${totalCount} backflips`;
+                            } else if (currentType === 'people') {
+                                counterStatus.textContent = `Max: ${maxCount} people`;
+                            } else {
+                                counterStatus.textContent = `Found ${maxCount} max`;
+                            }
+                            startBtn.textContent = '✅ Complete!';
+                            
+                            // Re-enable after 2 seconds
+                            setTimeout(() => {
+                                startBtn.textContent = '🚀 Start Counting & Play Video';
+                                startBtn.disabled = false;
+                                isRunning = false;
+                            }, 2000);
+                        };
+                    }
+                };
+                
+                eventSource.onerror = (error) => {
+                    console.error('❌ EventSource error:', error);
+                    console.error('ReadyState:', eventSource.readyState);
+                    
+                    // Only close if not already closed
+                    if (eventSource.readyState !== EventSource.CLOSED) {
+                        eventSource.close();
+                    }
+                    
+                    counterStatus.className = 'counter-status';
+                    
+                    // Check if we got any detections before the error
+                    if (maxCount > 0) {
+                        counterStatus.textContent = `Found ${maxCount} max`;
+                    } else {
+                        counterStatus.textContent = 'Check console for errors';
+                    }
+                    
+                    startBtn.textContent = '🚀 Start Counting & Play Video';
+                    startBtn.disabled = false;
+                    isRunning = false;
+                };
+                
+            } catch (error) {
+                console.error('Error:', error);
+                startBtn.textContent = '🚀 Start Counting & Play Video';
+                startBtn.disabled = false;
+                isRunning = false;
+            }
+        }
+    </script>
+</body>
+</html>

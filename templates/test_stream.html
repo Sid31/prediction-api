@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stream Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: white; }
+        #log { background: #000; padding: 10px; border: 1px solid #667eea; border-radius: 5px; }
+        .success { color: #38ef7d; }
+        .error { color: #ff6b6b; }
+        .info { color: #667eea; }
+    </style>
+</head>
+<body>
+    <h1>EventSource Stream Test</h1>
+    <button onclick="testStream()">Test Stream</button>
+    <div id="log"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function testStream() {
+            document.getElementById('log').innerHTML = '';
+            log('🔗 Starting stream test...', 'info');
+            
+            const url = '/api/stream-counter?video_path=/uploads/1760892120_tets.mp4&query=Is%20anyone%20doing%20a%20backflip?';
+            log('URL: ' + url, 'info');
+            
+            const eventSource = new EventSource(url);
+            let messageCount = 0;
+            
+            eventSource.onopen = () => {
+                log('✅ EventSource opened', 'success');
+            };
+            
+            eventSource.onmessage = (event) => {
+                messageCount++;
+                try {
+                    const data = JSON.parse(event.data);
+                    log(`📊 Message ${messageCount}: ${JSON.stringify(data)}`, 'success');
+                    
+                    if (data.type === 'complete') {
+                        log('✅ Stream completed', 'success');
+                        eventSource.close();
+                    }
+                    
+                    if (data.type === 'error') {
+                        log(`❌ Error: ${data.message}`, 'error');
+                        eventSource.close();
+                    }
+                } catch (e) {
+                    log(`⚠️ Parse error: ${e}`, 'error');
+                }
+            };
+            
+            eventSource.onerror = (error) => {
+                log(`❌ EventSource error - ReadyState: ${eventSource.readyState}`, 'error');
+                log(`Error object: ${JSON.stringify(error)}`, 'error');
+                eventSource.close();
+            };
+        }
+    </script>
+</body>
+</html>
